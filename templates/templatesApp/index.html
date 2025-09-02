@@ -12,7 +12,6 @@
     <section class="card">
       <p class="hint">Pista: <span>{{ hint }}</span></p>
 
-      <!-- Formulario de adivinanza -->
       <form method="post" class="form search-wrap" id="guessForm">
         {% csrf_token %}
         <input id="guess" name="guess" type="text"
@@ -22,14 +21,12 @@
         <ul id="suggestions" class="sug-list" style="display:none;"></ul>
       </form>
 
-      <!-- Resultado -->
       {% if result %}
         <div class="result {% if is_correct %}ok{% else %}error{% endif %}">
           {{ result }}
         </div>
       {% endif %}
 
-      <!-- Encabezados -->
       <div class="grid-header">
         <div class="header-cell">Nombre</div>
         <div class="header-cell">Género</div>
@@ -39,7 +36,6 @@
         <div class="header-cell">Relación</div>
       </div>
 
-      <!-- Intentos -->
       {% if attempts %}
         {% for att in attempts %}
         <div class="attempt">
@@ -67,17 +63,32 @@
         <p>Aún no has hecho intentos.</p>
       {% endif %}
 
-      <!-- Botón "Jugar de nuevo" -->
+    </section>
       <form method="post" style="margin-top:16px; text-align:center;">
         {% csrf_token %}
-        <button type="submit" name="reset" class="btn">Jugar de nuevo</button>
+        <button type="submit" name="reset" class="btn">Reiniciar/ jugar de nuevo</button>
       </form>
-    </section>
-
     <footer class="footer">
       <small>practicando ando</small>
     </footer>
   </main>
+
+
+
+    {% if is_correct and imagen %}
+    <div class="overlay">
+    <div class="modal">
+        <img src="{% static imagen %}" alt="Personaje" class="winner-img">
+        <h2>¡Correcto! Era {{ last_guess|title }}</h2>
+        <form method="post">
+        {% csrf_token %}
+        <button type="submit" name="reset" class="btn">Jugar de nuevo</button>
+        </form>
+    </div>
+    </div>
+    {% endif %}
+
+
 
   <script>
   const input = document.getElementById("guess");

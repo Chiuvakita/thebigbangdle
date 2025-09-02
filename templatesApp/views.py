@@ -2,9 +2,6 @@ import random
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
 
-# ==========================
-# AUTOCOMPLETE
-# ==========================
 def autocomplete(request):
     q = request.GET.get("q", "").lower()
     if not q:
@@ -18,60 +15,112 @@ def autocomplete(request):
 # ==========================
 CHARACTERS = {
     "sheldon": {
-        "pista": "Bazinga! Físico teórico; compañero de Leonard.",
+        "pista": "No es el mayor del grupo, pero su edad mental parece diferente.",
         "genero": "Hombre",
         "ocupacion": "Físico teórico",
         "nacionalidad": "Estadounidense",
         "pelo": "Castaño",
         "relacion": "Amy",
+        "imagen": "imagenes/sheldon.jpg",
     },
     "leonard": {
-        "pista": "Físico experimental; usa gafas y vive con Sheldon.",
+        "pista": "No suele liderar, pero siempre termina en el centro de las discusiones.",
         "genero": "Hombre",
         "ocupacion": "Físico experimental",
         "nacionalidad": "Estadounidense",
         "pelo": "Castaño",
         "relacion": "Penny",
+        "imagen": "imagenes/leonard.jpg",
     },
     "penny": {
-        "pista": "Vecina de enfrente, actriz/mesera; luego vendedora.",
+        "pista": "Nunca fue reconocida por sus estudios académicos, pero aun así influye en todos.",
         "genero": "Mujer",
-        "ocupacion": "Actriz / Mesera",
+        "ocupacion": "Actriz / Vendedora",
         "nacionalidad": "Estadounidense",
         "pelo": "Rubio",
         "relacion": "Leonard",
+        "imagen": "imagenes/penny.jpg",
     },
     "howard": {
-        "pista": "Ingeniero aeroespacial con madre muy presente.",
+        "pista": "Comparte más cosas con su madre de las que le gustaría admitir.",
         "genero": "Hombre",
         "ocupacion": "Ingeniero aeroespacial",
         "nacionalidad": "Estadounidense",
         "pelo": "Castaño",
         "relacion": "Bernadette",
+        "imagen": "imagenes/howard.jpg",
     },
     "raj": {
-        "pista": "Astrofísico que al inicio no podía hablar con mujeres.",
+        "pista": "Habla de sentimientos más que de ciencia, pero sigue siendo científico.",
         "genero": "Hombre",
         "ocupacion": "Astrofísico",
         "nacionalidad": "Indio",
         "pelo": "Negro",
         "relacion": "Soltero",
+        "imagen": "imagenes/raj.jpg",
     },
     "amy": {
-        "pista": "Neurocientífica, pareja de Sheldon.",
+        "pista": "No siempre fue parte del grupo, pero acabó siendo indispensable.",
         "genero": "Mujer",
         "ocupacion": "Neurocientífica",
         "nacionalidad": "Estadounidense",
         "pelo": "Castaño",
         "relacion": "Sheldon",
+        "imagen": "imagenes/amy.jpg",
     },
     "bernadette": {
-        "pista": "Microbióloga con voz dulce y carácter fuerte.",
+        "pista": "Pequeña en tamaño, pero no en personalidad.",
         "genero": "Mujer",
         "ocupacion": "Microbióloga",
         "nacionalidad": "Estadounidense",
         "pelo": "Rubio",
         "relacion": "Howard",
+        "imagen": "imagenes/bernadette.jpg",
+    },
+    "stuart": {
+        "pista": "Siempre está cerca de los cómics, pero no siempre del éxito.",
+        "genero": "Hombre",
+        "ocupacion": "Dueño de tienda de cómics",
+        "nacionalidad": "Estadounidense",
+        "pelo": "Castaño",
+        "relacion": "Soltero",
+        "imagen": "imagenes/stuart.jpg",
+    },
+    "beverly": {
+        "pista": "Su forma de criar es tan científica como fría.",
+        "genero": "Mujer",
+        "ocupacion": "Psiquiatra / Autora",
+        "nacionalidad": "Estadounidense",
+        "pelo": "Rubio",
+        "relacion": "Madre de Leonard",
+        "imagen": "imagenes/beverly.jpg",
+    },
+    "emily": {
+        "pista": "Interesada en lo macabro, pero aún así formó pareja dentro del grupo.",
+        "genero": "Mujer",
+        "ocupacion": "Dermatóloga",
+        "nacionalidad": "Estadounidense",
+        "pelo": "Pelirrojo",
+        "relacion": "Raj",
+        "imagen": "imagenes/emily.jpg",  
+    },
+    "leslie": {
+        "pista": "Científica con opiniones fuertes, suele discutir con Sheldon.",
+        "genero": "Mujer",
+        "ocupacion": "Física experimental",
+        "nacionalidad": "Estadounidense",
+        "pelo": "Castaño",
+        "relacion": "Leonard (ocasional)",
+        "imagen": "imagenes/leslie.jpg",
+    },
+    "wil_wheaton": {
+        "pista": "No es científico, pero es recordado por su papel en otra galaxia.",
+        "genero": "Hombre",
+        "ocupacion": "Actor / Él mismo",
+        "nacionalidad": "Estadounidense",
+        "pelo": "Castaño",
+        "relacion": "Enemigo-amigo de Sheldon",
+        "imagen": "imagenes/wil.jpg",
     },
 }
 
@@ -83,6 +132,11 @@ VARIANTS = {
     "raj": {"raj", "rajesh", "raj koothrappali"},
     "amy": {"amy", "amy farrah fowler"},
     "bernadette": {"bernadette", "bernadette rostenkowski"},
+    "stuart": {"stuart", "stuart bloom"},
+    "beverly": {"beverly", "beverly hofstadter"},
+    "emily": {"emily", "emily sweeney"},
+    "leslie": {"leslie", "leslie winkle"},
+    "wil_wheaton": {"wil wheaton", "wheaton"},
 }
 
 ALL_NAMES = sorted({v for vs in VARIANTS.values() for v in vs})
@@ -115,10 +169,10 @@ def index(request):
         "all_names": ALL_NAMES,
         "suggestions": [],
         "attempts": request.session.get("attempts", []),
+        "imagen": None,
     }
 
     if request.method == "POST":
-        # Botón "Reiniciar juego"
         if "reset" in request.POST:
             _reset_secret(request)
             return redirect("home")
@@ -150,20 +204,12 @@ def index(request):
             attempts.insert(0, attempt)
             request.session["attempts"] = attempts
 
-        # guardar resultado en sesión
+        # Verificar acierto
         is_ok = guess in VARIANTS.get(secret, set())
-        request.session["last_result"] = (
-            f"¡Correcto! Era {secret.title()} 🎉" if is_ok else "Ups, intenta de nuevo."
-        )
-        request.session["is_correct"] = is_ok
+        ctx["is_correct"] = is_ok
+        ctx["result"] = f"¡Correcto! Era {secret.title()} 🎉" if is_ok else "Ups, intenta de nuevo."
 
         if is_ok:
-            _reset_secret(request)
-
-        return redirect("home")
-
-    # en GET recuperamos el último resultado
-    ctx["result"] = request.session.pop("last_result", None)
-    ctx["is_correct"] = request.session.pop("is_correct", False)
+            ctx["imagen"] = CHARACTERS[secret]["imagen"]
 
     return render(request, "templatesApp/index.html", ctx)
