@@ -1,0 +1,112 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adivina el personaje — TBBT</title>
+  <link rel="stylesheet" href="{% static 'css/index.css' %}">
+</head>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <p class="hint">Pista: <span>{{ hint }}</span></p>
+
+      <!-- Formulario de adivinanza -->
+      <form method="post" class="form search-wrap" id="guessForm">
+        {% csrf_token %}
+        <input id="guess" name="guess" type="text"
+               class="input" placeholder="Escribe un nombre…"
+               autocomplete="off" required>
+        <button class="btn" type="submit">Comprobar</button>
+        <ul id="suggestions" class="sug-list" style="display:none;"></ul>
+      </form>
+
+      <!-- Resultado -->
+      {% if result %}
+        <div class="result {% if is_correct %}ok{% else %}error{% endif %}">
+          {{ result }}
+        </div>
+      {% endif %}
+
+      <!-- Encabezados -->
+      <div class="grid-header">
+        <div class="header-cell">Nombre</div>
+        <div class="header-cell">Género</div>
+        <div class="header-cell">Profesión</div>
+        <div class="header-cell">País</div>
+        <div class="header-cell">Pelo</div>
+        <div class="header-cell">Relación</div>
+      </div>
+
+      <!-- Intentos -->
+      {% if attempts %}
+        {% for att in attempts %}
+        <div class="attempt">
+          <div class="box {% if att.comparisons.nombre %}verde{% else %}rojo{% endif %}">
+            {{ att.nombre }}
+          </div>
+          <div class="box {% if att.comparisons.genero %}verde{% else %}rojo{% endif %}">
+            {{ att.data.genero }}
+          </div>
+          <div class="box {% if att.comparisons.ocupacion %}verde{% else %}rojo{% endif %}">
+            {{ att.data.ocupacion }}
+          </div>
+          <div class="box {% if att.comparisons.nacionalidad %}verde{% else %}rojo{% endif %}">
+            {{ att.data.nacionalidad }}
+          </div>
+          <div class="box {% if att.comparisons.pelo %}verde{% else %}rojo{% endif %}">
+            {{ att.data.pelo }}
+          </div>
+          <div class="box {% if att.comparisons.relacion %}verde{% else %}rojo{% endif %}">
+            {{ att.data.relacion }}
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p>Aún no has hecho intentos.</p>
+      {% endif %}
+
+      <!-- Botón "Jugar de nuevo" -->
+      <form method="post" style="margin-top:16px; text-align:center;">
+        {% csrf_token %}
+        <button type="submit" name="reset" class="btn">Jugar de nuevo</button>
+      </form>
+    </section>
+
+    <footer class="footer">
+      <small>practicando ando</small>
+    </footer>
+  </main>
+
+  <script>
+  const input = document.getElementById("guess");
+  const list = document.getElementById("suggestions");
+
+  input.addEventListener("input", async () => {
+    const q = input.value.trim();
+    if (!q) { list.style.display="none"; return; }
+
+    let res = await fetch(`/autocomplete/?q=${q}`);
+    let data = await res.json();
+
+    if (data.length === 0) { list.style.display="none"; return; }
+
+    list.innerHTML = "";
+    data.forEach(n => {
+      let li = document.createElement("li");
+      li.textContent = n;
+      li.onclick = () => { input.value = n; list.style.display="none"; };
+      list.appendChild(li);
+    });
+    list.style.display="block";
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!list.contains(e.target) && e.target !== input) {
+      list.style.display="none";
+    }
+  });
+  </script>
+</body>
+</html>
