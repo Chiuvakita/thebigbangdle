@@ -10,9 +10,7 @@ def autocomplete(request):
     results = [n for n in ALL_NAMES if q in n.lower()]
     return JsonResponse(results, safe=False)
 
-# ==========================
-# DATA
-# ==========================
+
 CHARACTERS = {
     "sheldon": {
         "pista": "No es el mayor del grupo, pero su edad mental parece diferente.",
@@ -141,9 +139,7 @@ VARIANTS = {
 
 ALL_NAMES = sorted({v for vs in VARIANTS.values() for v in vs})
 
-# ==========================
-# HELPERS
-# ==========================
+
 def _pick_secret(request):
     if "secret_char" not in request.session:
         request.session["secret_char"] = random.choice(list(CHARACTERS.keys()))
@@ -154,9 +150,7 @@ def _reset_secret(request):
     request.session["secret_char"] = random.choice(list(CHARACTERS.keys()))
     request.session["attempts"] = []
 
-# ==========================
-# VIEW INDEX
-# ==========================
+
 def index(request):
     secret = _pick_secret(request)
     secret_data = CHARACTERS[secret]
@@ -180,7 +174,6 @@ def index(request):
         guess = (request.POST.get("guess") or "").strip().lower()
         ctx["last_guess"] = guess
 
-        # detectar personaje
         guess_key = None
         for k, vs in VARIANTS.items():
             if guess in vs:
@@ -204,7 +197,6 @@ def index(request):
             attempts.insert(0, attempt)
             request.session["attempts"] = attempts
 
-        # Verificar acierto
         is_ok = guess in VARIANTS.get(secret, set())
         ctx["is_correct"] = is_ok
         ctx["result"] = f"¡Correcto! Era {secret.title()} 🎉" if is_ok else "Ups, intenta de nuevo."
